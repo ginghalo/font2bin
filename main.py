@@ -148,7 +148,20 @@ def font2image(font_file,
 
     arr = []
     
+    out_folder,ext = os.path.splitext(os.path.basename(font_file))
+
+    if os.path.exists(out_folder) == False:
+        os.makedirs(out_folder)
+
+    fb = open(out_folder + f'/{out_folder}.bin','wb+')
+    i = 0
+    max_code = 0
     for code in decimal_unicode:
+        max_code = code
+        while code > i:
+            fb.write(np.full(256,255,dtype=np.uint8))
+            i += 1
+        
         char = chr(code)
 
         image = char_to_image(char, font_pil, image_size, bg_color, fg_color)
@@ -158,14 +171,13 @@ def font2image(font_file,
         
         iml = list(image.getdata())
         arr += iml
+
+        fb.write(np.array(iml,dtype=np.uint8))
+        i += 1
             
-    print(len(decimal_unicode),len(arr))
+    print(max_code,len(decimal_unicode),len(arr))
     start_arr = np.array(arr,dtype=np.uint8)
     end_arr = np.array(decimal_unicode,dtype=np.uint32)
-
-    out_folder,ext = os.path.splitext(os.path.basename(font_file))
-
-    os.makedirs(out_folder)
 
     start_arr.tofile(out_folder + '/img_u8.raw')
     end_arr.tofile(out_folder +'/unicode_u32.raw')
@@ -180,10 +192,12 @@ def font2image(font_file,
     f0.close()
     f1.close()
     f.close()
+    fb.close()
+
 
 
 if __name__ == '__main__':
-    font_file = r'GB2312.ttf'
-    #font_file = r'SourceHanSerifSC-SemiBold.otf'
-    font2image(font_file, 16, 16)
+    font_files = [r'GB2312.ttf',r'SourceHanSerifSC-SemiBold.otf']
+    for font_file in font_files:
+        font2image(font_file, 15, 16)
 
